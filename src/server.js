@@ -15,6 +15,11 @@ app.use(clerkMiddleware());
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postsRoutes);
 
+app.use((err, req, res) => {
+  console.error('Unhandled Error:', err);
+  res.status(500).json({ message: err.message || 'Internal Server Error' });
+});
+
 const startServer = async () => {
   try {
     await connectDB();

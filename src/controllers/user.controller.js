@@ -8,7 +8,7 @@ import Notification from '../models/notification.model.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
-import { getAuth, clerkClient } from '@clerk/express';
+import { clerkClient } from '@clerk/express';
 
 export const signUp = asyncHandler(async (req, res) => {
   const { firstName, lastName, userName, email, password } = req.body;
@@ -79,7 +79,7 @@ export const getUserProfile = asyncHandler(async (req, res) => {
 });
 
 export const updateProfile = asyncHandler(async (req, res) => {
-  const { userId } = getAuth(req);
+  const userId = req.userId;
   const user = await User.findOneAndUpdate({ clerkId: userId }, req.body, {
     new: true,
   });
@@ -90,7 +90,7 @@ export const updateProfile = asyncHandler(async (req, res) => {
 });
 
 export const syncUser = asyncHandler(async (req, res) => {
-  const { userId } = getAuth(req);
+  const userId = req.userId;
   const existingUser = await User.findOne({ clerkId: userId });
   if (existingUser) {
     return res
@@ -106,8 +106,8 @@ export const syncUser = asyncHandler(async (req, res) => {
     email: clerkUser.emailAddresses[0].emailAddress,
     firstName: clerkUser.firstName || '',
     lastName: clerkUser.lastName || '',
-    username: clerkUser.emailAddresses[0].emailAddress.split('@')[0],
-    profilePicture: clerkUser.imageUrl || '',
+    userName: clerkUser.emailAddresses[0].emailAddress.split('@')[0],
+    profilePic: clerkUser.imageUrl || '',
   };
 
   const user = await User.create(userData);
@@ -116,7 +116,7 @@ export const syncUser = asyncHandler(async (req, res) => {
 });
 
 export const getCurrentUser = asyncHandler(async (req, res) => {
-  const { userId } = getAuth(req);
+  const userId = req.userId;
   const user = await User.findOne({ clerkId: userId });
 
   if (!user) return res.status(404).json({ error: 'User not found' });
@@ -125,7 +125,7 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 });
 
 export const followUser = asyncHandler(async (req, res) => {
-  const { userId } = getAuth(req);
+  const userId = req.userId;
   const { targetUserId } = req.params;
 
   if (userId === targetUserId)

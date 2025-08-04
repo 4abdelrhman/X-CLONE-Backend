@@ -5,6 +5,7 @@ import { connectDB } from './config/db.js';
 import { ENV } from './config/env.js';
 
 import userRoutes from './routes/user.route.js';
+import postsRoutes from './routes/post.route.js';
 
 const app = express();
 app.use(cors());
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use(clerkMiddleware());
 
 app.use('/api/users', userRoutes);
+app.use('/api/posts', postsRoutes);
 
 const startServer = async () => {
   try {

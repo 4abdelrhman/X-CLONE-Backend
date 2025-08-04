@@ -4,7 +4,6 @@ const userSchema = new mongoose.Schema(
   {
     clerkId: {
       type: String,
-      required: true,
       unique: true,
     },
     firstName: {
@@ -24,6 +23,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      minLength: 8,
     },
     profilePic: {
       type: String,

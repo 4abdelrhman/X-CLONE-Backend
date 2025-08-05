@@ -4,7 +4,7 @@ export const arcjetMiddleware = async (req, res, next) => {
   try {
     const decision = await aj.protect(req, { requested: 1 });
     if (decision.isDenied()) {
-      if (decision.reason.isRateLimited()) {
+      if (decision.reason.isRateLimit()) {
         return res.status(429).json({
           error: 'Too many requests',
           message: 'You have exceeded the rate limit. Please try again later.',

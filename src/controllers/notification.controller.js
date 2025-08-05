@@ -2,7 +2,7 @@ import asyncHandler from 'express-async-handler';
 import Notification from '../models/notification.model.js';
 import User from '../models/user.model.js';
 
-export const getNotification = asyncHandler(async (req, res) => {
+export const getNotifications = asyncHandler(async (req, res) => {
   const user = req.user;
   if (!user) return res.status(401).json({ message: 'User not found' });
 

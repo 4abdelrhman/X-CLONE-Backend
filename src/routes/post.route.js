@@ -12,7 +12,7 @@ import upload from '../middleware/upload.middleware.js';
 
 const router = express.Router();
 
-//Public Routes
+//Public Routesz
 router.get('/', getPosts);
 router.get('/:postId', getPost);
 router.get('/user/:userName', getUserPosts);

@@ -3,6 +3,7 @@ import Post from '../models/post.model.js';
 import User from '../models/user.model.js';
 import cloudinary from '../config/cloudinary.js';
 import Notification from '../models/notification.model.js';
+import Comment from '../models/comment.model.js';
 
 export const getPosts = asyncHandler(async (req, res) => {
   const posts = await Post.find()
@@ -18,7 +19,7 @@ export const getPosts = asyncHandler(async (req, res) => {
   res.status(200).json({ posts });
 });
 
-const getPost = asyncHandler(async (req, res) => {
+export const getPost = asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const post = await Post.findById(postId)
     .populate('user', 'firstName lastName userName email profilePic')
@@ -44,7 +45,8 @@ export const getUserPosts = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 })
     .populate('user', 'firstName lastName userName email profilePic')
     .populate({
-      comments: {
+      path: 'comments',
+      populate: {
         path: 'user',
         select: 'firstName lastName userName email profilePic',
       },
@@ -54,17 +56,16 @@ export const getUserPosts = asyncHandler(async (req, res) => {
 });
 
 export const createPost = asyncHandler(async (req, res) => {
-  const userId = req.userId;
   const { content } = req.body;
   const imageFile = req.file;
+
+  const user = req.user;
+  if (!user) return res.status(404).json({ message: 'User not found' });
 
   if (!content && !imageFile)
     return res
       .status(400)
       .json({ message: 'Post must contain either text or image' });
-
-  const user = await User.findById(userId);
-  if (!user) return res.status(404).json({ message: 'User not found' });
 
   let imageUrl = '';
 
@@ -101,36 +102,36 @@ export const createPost = asyncHandler(async (req, res) => {
 });
 
 export const likePost = asyncHandler(async (req, res) => {
-  const userId = req.userId;
   const { postId } = req.params;
+  const user = req.user;
+  const userId = user._id;
 
-  const user = await User.findById(userId);
   const post = await Post.findById(postId);
-
   if (!user || !post)
     return res.status(404).json({ message: 'User or Post not found' });
 
   const isLiked = post.likes.includes(userId);
 
   if (isLiked) {
-    //Unlike the post
-    await Post.findOneAndUpdate(postId, {
+    // Unlike the post
+    await Post.findByIdAndUpdate(postId, {
       $pull: { likes: userId },
     });
   } else {
-    //Like the post
-    await findOneAndUpdate(postId, {
+    // Like the post
+    await Post.findByIdAndUpdate(postId, {
       $push: { likes: userId },
     });
-  }
 
-  if (post.user.toString() !== userId.toString()) {
-    await Notification.create({
-      from: userId,
-      to: post.user,
-      type: 'Like',
-      post: postId,
-    });
+    // Don't notify if user likes their own post
+    if (post.user.toString() !== userId.toString()) {
+      await Notification.create({
+        from: userId,
+        to: post.user,
+        type: 'Like',
+        post: postId,
+      });
+    }
   }
 
   res.status(200).json({
@@ -139,10 +140,9 @@ export const likePost = asyncHandler(async (req, res) => {
 });
 
 export const deletePost = asyncHandler(async (req, res) => {
-  const userId = req.userId;
   const { postId } = req.params;
 
-  const user = await User.findById({ userId });
+  const user = req.user;
   const post = await Post.findById(postId);
 
   if (!user || !post)
